@@ -332,7 +332,7 @@ define(["lib/jquery", "lib/handlebars", "lib/highlight", "lib/jsonpointer", "lib
             if(typeof schema == "string") {
                 schema = JSON.parse(schema);
             }
-
+            schema.baseUrl = baseUrl;
             var refsPromise = $.Deferred().resolve().promise();
             var refs = {};
 
@@ -462,7 +462,8 @@ define(["lib/jquery", "lib/handlebars", "lib/highlight", "lib/jsonpointer", "lib
                             //External reference, fetch it.
                             var segments = item.split("#");
                             refs[item] = null;
-                            var p = $.get(segments[0]).then(function(content) {
+                            var url = segments[0];
+                            var p = $.get(url).then(function(content) {
                                 if(typeof content != "object") {
                                     try {
                                         content = JSON.parse(content);
@@ -473,7 +474,9 @@ define(["lib/jquery", "lib/handlebars", "lib/highlight", "lib/jsonpointer", "lib
                                 if(content) {
                                     refs[item] = content;
                                     renderBox();
-                                    resolveRefsReentrant(content); 
+                                    var burl = url.substring(0,url.lastIndexOf('/')+1);
+                                    content.baseUrl = burl;
+                                    resolveRefsReentrant(content);
                                 }
                             });
                         }
@@ -481,10 +484,13 @@ define(["lib/jquery", "lib/handlebars", "lib/highlight", "lib/jsonpointer", "lib
                             //Local to this server, fetch relative
                             var segments = item.split("#");
                             refs[item] = null;
-                            var p = $.get(baseUrl + segments[0]).then(function(content) {
+                            var url = schema.baseUrl + segments[0];
+                            var p = $.get(url).then(function(content) {
+                                var burl = url.substring(0,url.lastIndexOf('/')+1);
                                 if(typeof content != "object") {
                                     try {
                                         content = JSON.parse(content);
+                                        content.baseUrl = burl;
                                     } catch(e) {
                                         console.error("Unable to parse "+segments[0], e);
                                     }
@@ -492,6 +498,7 @@ define(["lib/jquery", "lib/handlebars", "lib/highlight", "lib/jsonpointer", "lib
                                 if(content) {
                                     refs[item] = content;
                                     renderBox();
+                                    content.baseUrl = burl;
                                     resolveRefsReentrant(content);
                                 }
                             });
