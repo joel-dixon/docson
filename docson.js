@@ -484,7 +484,10 @@ define(["lib/jquery", "lib/handlebars", "lib/highlight", "lib/jsonpointer", "lib
                             //Local to this server, fetch relative
                             var segments = item.split("#");
                             refs[item] = null;
-                            var url = schema.baseUrl + segments[0];
+                            if( segments[0].charAt(0) == "/" )
+                              var url = segments[0];
+                            else
+                              var url = schema.baseUrl + segments[0];
                             var p = $.get(url).then(function(content) {
                                 var burl = url.substring(0,url.lastIndexOf('/')+1);
                                 if(typeof content != "object") {
